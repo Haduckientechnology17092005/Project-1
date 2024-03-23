@@ -13,14 +13,14 @@ typedef struct Node *Position;
 
 struct ContansList {
     int max_size;
-    List *Hnode;
+    List *PointToHeadedNode;
 };
 typedef struct ContansList *Matrix;
 
 Matrix createMatrix(int max_size){
     Matrix mt = malloc(sizeof(struct ContansList));
     mt->max_size = max_size;
-    mt->Hnode = malloc((max_size + 1)*sizeof(struct Node));
+    mt->PointToHeadedNode = malloc((max_size + 1)*sizeof(struct Node));
     return mt;
 }
 
@@ -60,13 +60,24 @@ void addListtoMatrix(Matrix *A, int n) {
     for(int i = 1; i <= n; i++) {
         List headedNode = createList();
         headedNode = addNodetoList(n);
-        (*A)->Hnode[i] = headedNode;
+        (*A)->PointToHeadedNode[i] = headedNode;
+    }
+}
+
+void deleteNodeMiddle(Matrix *A, int n) {
+    for(int i = 1; i <= n; i++){
+        Position p = (*A)->PointToHeadedNode[i];
+        for(int j = 1; j <= n / 2 + 1; j++){
+            p = p->next;
+        }
+        p->prev->next = p->next;
+        p->next->prev = p->prev;
     }
 }
 
 void displayMatrix(Matrix A, int n) {  
     for(int i = 1; i <= n; i++) {
-        Position p = A->Hnode[i]->next;
+        Position p = A->PointToHeadedNode[i]->next;
         while(p!= NULL) {
             printf("%.3f\t", p->data);
             p = p->next;
@@ -75,6 +86,7 @@ void displayMatrix(Matrix A, int n) {
     }
 }
 
+
 int main() {
     Matrix A = createMatrix(MAX_SIZE);
 
@@ -82,8 +94,10 @@ int main() {
 
     addListtoMatrix(&A, n);
     
-    
+    displayMatrix(A, n);
 
+    deleteNodeMiddle(&A, n);
+    printf("AfterDelete!!!\n");
     displayMatrix(A, n);
     return 0;
 }
