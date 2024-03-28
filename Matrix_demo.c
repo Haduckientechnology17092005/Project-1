@@ -58,6 +58,14 @@ List addNodetoList(int n) { // Thêm Node vào List
     return headerNode;
 }
 
+void addListtoMatrix(Matrix *A, int n) {
+    for(int i = 1; i <= n; i++) {
+        List headerNode = createHeaderNode();
+        headerNode = addNodetoList(n);
+        (*A)->PointToHeaderNode[i] = headerNode;
+    }
+}
+
 List createList(int n) {
     return addNodetoList(n - 1);
 }
@@ -76,14 +84,6 @@ List createListZero(int n) {
         p = p->next;
     }
     return headerNode;
-}
-
-void addListtoMatrix(Matrix *A, int n) {
-    for(int i = 1; i <= n; i++) {
-        List headerNode = createHeaderNode();
-        headerNode = addNodetoList(n);
-        (*A)->PointToHeaderNode[i] = headerNode;
-    }
 }
 
 void deleteNodeMiddle(Matrix *A, int n) {
@@ -131,20 +131,25 @@ void displayList(List headerNode){
     }
 }
 
-void charge(int n, Matrix A, List HeadedNodeB, List N0, float err) {
+bool charge(int n, Matrix A, List HeadedNodeB, List N0, float err) {
     List N1 = createListZero(n);
     bool dk;
     do{
-        dk = 0;
+        dk = false;
         for(int i = 1; i <= n; i++) {
-            float s = 0;
+            float s = 0, converg = 0;
             for(int j = 1; j <= n; j++)
-                if(i != j) s += getNodeFromMarix(A, i, j)->data * getNodeFromList(N0,j)->data;
+                if(i != j){
+                    s += getNodeFromMarix(A, i, j)->data * getNodeFromList(N0,j)->data;
+                    converg += fabs(getNodeFromMarix(A, i, j)->data);
+                }
+            if(converg >= getNodeFromMarix(A, i, i)->data) return false;
             getNodeFromList(N1, i)->data = (getNodeFromList(HeadedNodeB, i)->data - s) / getNodeFromMarix(A, i, i)->data;
-            if(fabs(getNodeFromList(N1, i)->data - getNodeFromList(N0, i)->data) >= err) dk = 1;
+            if(fabs(getNodeFromList(N1, i)->data - getNodeFromList(N0, i)->data) >= err) dk = true;
         }
         for(int i = 1; i <= n; i++) getNodeFromList(N0, i)->data = getNodeFromList(N1, i)->data;
     }while (dk);
+    return true;
 }
 
 int main() {
@@ -154,26 +159,29 @@ int main() {
     int n; printf("Nhap so an:\n"); scanf("%d", &n);
 
     printf("Nhap Ma Tran:\n");
-    addListtoMatrix(&A /*&SaveLocationDelete*/, n);
+    addListtoMatrix(&A, /*&SaveLocationDelete*/ n);
     displayMatrix(A, n);
 
 
 
-    // deleteNodeMiddle(&A, n);
-    // printf("AfterDelete!!!\n");
-    // displayMatrix(A, n);
+    deleteNodeMiddle(&A, n);
+    printf("AfterDelete!!!\n");
+    displayMatrix(A, n);
 
-    // printf("Nhap List B:\n");
-    // List headerNodeB = createList(n);
+    printf("Nhap List B:\n");
+    List headerNodeB = createList(n);
 
-    // printf("Nhap nghiem ban dau:\n");
-    // List N0 = createList(n);
+    printf("Nhap nghiem ban dau:\n");
+    List N0 = createList(n);
 
-    // float err; printf("Nhap sai so:\n"); scanf("%f", &err);
-    // charge(n, A, headerNodeB, N0, err);
+    float err; printf("Nhap sai so:\n"); scanf("%f", &err);
+    if(charge(n, A, headerNodeB, N0, err)) {
+        printf("Nghiem he phuong trinh:\n");
+        displayList(N0);
+    }
+    else printf("Ma tran nhap vao khoang thoa man dieu kien hoi tu\n");
 
-    // printf("Nghiem he phuong trinh:\n");
-    // displayList(N0);
+    
 
     return 0;
 }
