@@ -131,7 +131,7 @@ void displayList(List headerNode){
     }
 }
 
-bool charge(int n, Matrix A, List HeadedNodeB, List N0, float err) {
+bool charge(int n, Matrix A, List HeadedNodeB, List N0, float esp) {
     List N1 = createListZero(n);
     bool dk;
     do{
@@ -145,7 +145,7 @@ bool charge(int n, Matrix A, List HeadedNodeB, List N0, float err) {
                 }
             if(converg >= getNodeFromMarix(A, i, i)->data) return false;
             getNodeFromList(N1, i)->data = (getNodeFromList(HeadedNodeB, i)->data - s) / getNodeFromMarix(A, i, i)->data;
-            if(fabs(getNodeFromList(N1, i)->data - getNodeFromList(N0, i)->data) >= err) dk = true;
+            if(fabs(getNodeFromList(N1, i)->data - getNodeFromList(N0, i)->data) >= esp) dk = true;
         }
         for(int i = 1; i <= n; i++) getNodeFromList(N0, i)->data = getNodeFromList(N1, i)->data;
     }while (dk);
@@ -168,14 +168,14 @@ int main() {
     printf("AfterDelete!!!\n");
     displayMatrix(A, n);
 
-    printf("Nhap List B:\n");
+    printf("Nhap List B:\n");~
     List headerNodeB = createList(n);
 
     printf("Nhap nghiem ban dau:\n");
     List N0 = createList(n);
 
-    float err; printf("Nhap sai so:\n"); scanf("%f", &err);
-    if(charge(n, A, headerNodeB, N0, err)) {
+    float esp; printf("Nhap sai so:\n"); scanf("%f", &esp);
+    if(charge(n, A, headerNodeB, N0, esp)) {
         printf("Nghiem he phuong trinh:\n");
         displayList(N0);
     }
