@@ -5,11 +5,13 @@
 
 #define MAX_SIZE 100
 #define esp 0.001
+
 struct Node {
     float data;
     struct Node *next;
     struct Node *prev;
 };
+
 typedef struct Node *List;
 typedef struct Node *Position;
 
@@ -17,6 +19,7 @@ struct ContansList {
     int max_size;
     List *PointToHeaderNode;
 };
+
 typedef struct ContansList *Matrix;
 
 Matrix createMatrix(int max_size) { // Tạo ma trận
@@ -66,6 +69,31 @@ void addListtoMatrix(Matrix A, int n) {
     }
 }
 
+Matrix readMatrixFromFile(char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Khong the mo file.\n");
+        exit(1);
+    }
+
+    int n;
+    fscanf(file, "%d", &n);
+
+    Matrix A = createMatrix(n);
+    for (int i = 1; i <= n; i++) {
+        List currentNode = A->PointToHeaderNode[i];
+        for (int j = 1; j <= n + 1; j++) {
+            float value;
+            fscanf(file, "%f", &value);
+            currentNode->next = createNode(value);
+            currentNode = currentNode->next;
+        }
+    }
+
+    fclose(file);
+    return A;
+}
+
 List createList(int n) {
     return addNodetoList(n - 1);
 }
@@ -86,10 +114,10 @@ List createListZero(int n) {
     return headerNode;
 }
 
-void deleteColumn(Matrix A, int n, int x) {
+void deleteColumn(Matrix A, int n) {
     for(int i = 1; i <= n; i++) {
         Position p = A->PointToHeaderNode[i];
-        for(int j = 1; j <= x; j++) {
+        for(int j = 1; j <= (n/2)+1; j++) {
             p = p->next;
         }
         p->prev->next = p->next;
@@ -97,7 +125,7 @@ void deleteColumn(Matrix A, int n, int x) {
     }
 }
 
-List getNodeFromMarix(Matrix A, int x, int y) {
+List getNodeFromMatrix(Matrix A, int x, int y) {
     Position p = A->PointToHeaderNode[x];
     for(int i = 1; i <= y; i++){
         p = p->next;
@@ -141,11 +169,11 @@ bool Gauss_Siedel(int n, Matrix A, List B, List N0) {
             float s = 0, converg = 0;
             for(int j = 1; j <= n; j++)
                 if(i != j){
-                    s += getNodeFromMarix(A, i, j)->data * getNodeFromList(N0,j)->data;
-                    converg += fabs(getNodeFromMarix(A, i, j)->data);
+                    s += getNodeFromMatrix(A, i, j)->data * getNodeFromList(N0,j)->data;
+                    converg += (fabs(getNodeFromMatrix(A, i, j)->data));
                 }
-            if(converg >= getNodeFromMarix(A, i, i)->data) return false;
-            getNodeFromList(N1, i)->data = (getNodeFromList(B, i)->data - s) / getNodeFromMarix(A, i, i)->data;
+            if(converg >= getNodeFromMatrix(A, i, i)->data) return false;
+            getNodeFromList(N1, i)->data = (getNodeFromList(B, i)->data - s) / getNodeFromMatrix(A, i, i)->data;
             if(fabs(getNodeFromList(N1, i)->data - getNodeFromList(N0, i)->data) >= esp) dk = true;
         }
         for(int i = 1; i <= n; i++) getNodeFromList(N0, i)->data = getNodeFromList(N1, i)->data;
@@ -157,12 +185,12 @@ void swap(float *a, float *b);
 
 int Gauss(int n, Matrix A, List B, List N0) {
     for(int i = 1; i <= n - 1; i++){
-        if(getNodeFromMarix(A, i, i)->data  == 0){
+        if(getNodeFromMatrix(A, i, i)->data  == 0){
             int check = 0;
             for(int j = i + 1; j <= n; j++){
-                if(getNodeFromMarix(A, j, i)->data != 0){
+                if(getNodeFromMatrix(A, j, i)->data != 0){
                     for(int k = 1; k <= n; k++){
-                        swap(&getNodeFromMarix(A, i, j)->data, &getNodeFromMarix(A, j, k)->data);
+                        swap(&getNodeFromMatrix(A, i, j)->data, &getNodeFromMatrix(A, j, k)->data);
                     }
                     swap(&getNodeFromList(B, i)->data, &getNodeFromList(B, j)->data);
                     
@@ -173,25 +201,23 @@ int Gauss(int n, Matrix A, List B, List N0) {
             if(check == 0) return 0;
         }
         for(int j = i + 1; j <= n; j++){
-            float h = -getNodeFromMarix(A, j, i)->data / getNodeFromMarix(A, i, i)->data;
-            for(int k = i; k <= n; k++) getNodeFromMarix(A, j, k)->data += h * getNodeFromMarix(A, i, k)->data;
+            float h = -getNodeFromMatrix(A, j, i)->data / getNodeFromMatrix(A, i, i)->data;
+            for(int k = i; k <= n; k++) getNodeFromMatrix(A, j, k)->data += h * getNodeFromMatrix(A, i, k)->data;
             getNodeFromList(B, j)->data += h * getNodeFromList(B, i)->data;
         }
     }
     
 	for(int i = n; i > 0; i--){
 		float s = 0;
-        if(getNodeFromMarix(A, i, i)->data == 0) {
+        if(getNodeFromMatrix(A, i, i)->data == 0) {
 			if(getNodeFromList(B, i)->data == 0) return 1;
 			else return 0;
 		}
-		for(int j = i; j <= n; j++) s += getNodeFromMarix(A, i, j)->data * getNodeFromList(N0, j)->data;
-		getNodeFromList(N0, i)->data = (getNodeFromList(B, i)->data - s) / getNodeFromMarix(A, i, i)->data;
+		for(int j = i; j <= n; j++) s += getNodeFromMatrix(A, i, j)->data * getNodeFromList(N0, j)->data;
+		getNodeFromList(N0, i)->data = (getNodeFromList(B, i)->data - s) / getNodeFromMatrix(A, i, i)->data;
 	}
 	return 2;
 }
-
-
 
 int main() {
     Matrix A = createMatrix(MAX_SIZE);
@@ -214,60 +240,37 @@ int main() {
         printf("Ma tran A da duoc luu!!\n");
     }
     else if(select == 2) {
-        FILE *file = freopen("Matrix.inp", "r", stdin);
-        //freopen("Matrix.out", "w", stdout);
-        scanf("%d", &n);
-        addListtoMatrix(A, n);
-        fclose(file);
+        A = readMatrixFromFile("input.txt");
     }
 
-    while(1) {
+    while(2) {
         printf("----------------------------------------------------------\n");
         printf("1.  In ra ma tran A\n");
-        printf("2.  Xoa 1 phan tu trong ma tran A\n");
-        printf("3.  Xoa 1 hang trong ma tran A\n");
-        printf("4.  Xoa 1 cot trong ma tran A\n");
-        printf("5.  Them 1 phan tu trong ma tran A\n");
-        printf("6.  Them 1 hang trong ma tran A\n");
-        printf("7.  Them 1 cot trong ma tran A\n");
-        printf("8.  Nhap ma tran B\n");
-        printf("9.  Giai he phuong trinh bang phuong phap Gauss-Siedel\n");
-        printf("10. Giai he phuong trinh bang phuong phap Gauss\n");//-----------------------------
-
-        printf("11. Thoat chuong trinh!!\n");
+        printf("2.  Xoa 1 cot o giua ma tran A\n");
+        printf("3.  Nhap ma tran B\n");
+        printf("4.  Giai he phuong trinh bang phuong phap Gauss-Siedel\n");
+        printf("5. Giai he phuong trinh bang phuong phap Gauss\n");//-----------------------------
+        printf("6. Thoat chuong trinh!!\n");
         printf("----------------------------------------------------------\n");
         printf("Nhap lua chon:\n");
 
         scanf("%d", &select);
         if(select == 1) {
             displayMatrix(A, n);
-        } else if(select == 2) {
-            scanf("Nhap vi tri can xoa:\n");
-            int x, y; scanf("%d%d", &x, &y);
+        }else if(select == 2) {
+            deleteColumn(A, n);
         } else if(select == 3) {
-            
-        } else if(select == 4) {
-            printf("Nhap cot can xoa:");
-            int x; scanf("%d", &x);
-            deleteColumn(A, n, x);
-        } else if(select == 5) {
-                
-        } else if(select == 6) {
-                
-        } else if(select == 7) {
-                
-        } else if(select == 8) {
             printf("Nhap List B:\n");
             B = createList(n); 
-        } else if(select == 9) {
+        } else if(select == 4) {
            printf("Nhap nghiem ban dau:\n");
             List N0 = createList(n);
             if(Gauss_Siedel(n, A, B, N0)) {
                 printf("Nghiem he phuong trinh:\n");
                 displayList(N0);
             }
-            else printf("Ma tran nhap vao khoang thoa man dieu kien hoi tu\n");
-        } else if(select == 10) {
+            else printf("Ma tran nhap vao khong thoa man dieu kien hoi tu\n");
+        } else if(select == 5) {
             List N0 = createListZero(n);
             int check = Gauss(n, A, B, N0);
             if(check == 2){
@@ -277,14 +280,12 @@ int main() {
             } else {
                 printf("Phuong trinh vo so nghiem!!\n");
             }
-        } else if(select == 11) {
+        } else if(select == 6) {
             printf("Da thoat chuong trinh!!\n");
             break;
         }
 
     }    
-    
-
     
 
     return 0;
